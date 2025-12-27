@@ -1,7 +1,4 @@
 
-# 🔵 Member 1: Nageswar (CB.SC.U4CSE24113)
-# Start Menu & Undo/Redo State Management
-
 import tkinter as tk
 from game_board import GameBoard
 
