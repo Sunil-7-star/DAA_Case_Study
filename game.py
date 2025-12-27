@@ -313,6 +313,4 @@ class TwoPlayerGreedyGame:
 # ================= RUN =================
 root = tk.Tk()
 StartMenu(root)
-
 root.mainloop()
-
