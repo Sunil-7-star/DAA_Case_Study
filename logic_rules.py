@@ -40,7 +40,7 @@ class RuleEngine:
 
     def is_duplicate(self,r,c):
         num=self.numbers[r][c]
-        return sum(self.numbers[r][j]==num and self.board[r][j]==WHITE for j in range(self.grid_size))>1 or                sum(self.numbers[i][c]==num and self.board[i][c]==WHITE for i in range(self.grid_size))>1
+        return sum(self.numbers[r][j]==num and self.board[r][j]==WHITE for j in range(self.grid_size))>1 or sum(self.numbers[i][c]==num and self.board[i][c]==WHITE for i in range(self.grid_size))>1
 
     def valid_black(self,r,c):
         self.board[r][c]=BLACK
