@@ -68,7 +68,6 @@ class RuleEngine:
                 if self.board[i][j] != BLACK:
                     total_white += 1
         return cnt == total_white
-
     def refresh(self):
         for r in range(self.grid_size):
             for c in range(self.grid_size):
