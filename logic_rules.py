@@ -34,6 +34,7 @@ class RuleEngine:
         if not self.valid_black(r,c):
             messagebox.showwarning("Invalid","Connectivity broken")
             return
+            
         self.save_state()
         self.make_black(r,c)
         self.ai_move()
@@ -64,7 +65,8 @@ class RuleEngine:
                 if 0<=nx<self.grid_size and 0<=ny<self.grid_size:
                     if not vis[nx][ny] and self.board[nx][ny]!=BLACK:
                         vis[nx][ny]=True; q.append((nx,ny)); cnt+=1
-        total=sum(self.board[i][j]!=BLACK for i in range(self.grid_size) for j in range(self.grid_size))
+        total=sum(self.board[i][j]!=BLACK 
+                  for i in range(self.grid_size) for j in range(self.grid_size))
         return cnt==total
 
     def refresh(self):
