@@ -1,7 +1,6 @@
 
 import tkinter as tk
-from game_board import GameBoard
-
+from game_board import GameBoar
 class StartMenu:
     def __init__(self, root):
         self.root = root
@@ -9,7 +8,6 @@ class StartMenu:
 
         self.size_var = tk.IntVar(value=5)
         self.diff_var = tk.StringVar(value="Easy")
-
         tk.Label(root, text="Select Grid Size", font=("Arial",12,"bold")).pack(pady=5)
         for s in (4,5,6):
             tk.Radiobutton(root, text=f"{s} x {s}", variable=self.size_var, value=s).pack()
