@@ -50,9 +50,9 @@ class GameBoard(RuleEngine, AI):
         grid = [random.sample(range(1, 10), self.grid_size) for _ in range(self.grid_size)]
         dup = {"Easy": 1, "Medium": 3, "Hard": 5}[self.difficulty]
         for _ in range(dup):
-            r = random.randrange(self.grid_size)
-            c1, c2 = random.sample(range(self.grid_size), 2)
-            grid[r][c2] = grid[r][c1]
+            r=random.randrange(self.grid_size)
+            c1,c2=random.sample(range(self.grid_size), 2)
+            grid[r][c2]=grid[r][c1]
         return grid
 
     def create_board(self):
