@@ -1,6 +1,6 @@
 
 import tkinter as tk
-from game_board import GameBoar
+from game_board import GameBoard
 class StartMenu:
     def __init__(self, root):
         self.root = root
