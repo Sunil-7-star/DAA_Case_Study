@@ -21,3 +21,19 @@ class DivideConquerAI:
           if score_left >= score_right:
               return left
           return right
+  def show_hint(self):
+        move = self.best_move()
+        if move is None:
+            return
+        r, c = move
+        b = self.buttons[r][c]
+        old = b.cget("bg")
+        b.config(bg="yellow")
+        self.root.after(1500, lambda: b.config(bg=old))
+
+    def solve(self):
+        while True:
+            m = self.best_move()
+            if m is None:
+                break
+            self.make_black(m[0], m[1])
