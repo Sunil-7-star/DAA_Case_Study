@@ -1,6 +1,15 @@
 WHITE="white"
 BLACK="black"
 class DPAI:
+
+  def __init__(self):
+        self.memo = {}    
+def ai_move(self):
+        move = self.best_move()
+        if move is None:
+            return
+        self.save_state()
+        self.make_black(move[0], move[1])
   
   def is_winning_position(self):
         key = self.get_state_key()
