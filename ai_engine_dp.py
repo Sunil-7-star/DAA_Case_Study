@@ -61,3 +61,20 @@ def ai_move(self):
             if m is None:
                 break
             self.make_black(m[0], m[1])
+
+def get_state_key(self):
+        key = []
+        for r in range(self.grid_size):
+            row = []
+            for c in range(self.grid_size):
+                row.append(self.board[r][c])
+            key.append(tuple(row))
+        return tuple(key)
+
+    def get_valid_moves(self):
+        moves = []
+        for r in range(self.grid_size):
+            for c in range(self.grid_size):
+                if self.board[r][c] == WHITE and self.is_duplicate(r, c) and self.valid_black(r, c):
+                    moves.append((r, c))
+        return moves
