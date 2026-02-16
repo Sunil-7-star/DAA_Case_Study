@@ -212,7 +212,15 @@ class GameBoard(RuleEngine, AI):
         
         StartMenu(menu_root)
         menu_root.mainloop()
-
+    def undo(self):
+        if len(self.undo_stack) <= 1: 
+            messagebox.showinfo("Undo", "No more moves to undo!")
+            return
+        self.redo_stack.append(self.undo_stack.pop())
+        self.board = copy.deepcopy(self.undo_stack[-1])
+        self.current_player = 1
+        self.refresh()
+        self.update_status()
     def check_game_over(self):
         has_move = False
         for i in range(self.grid_size):
@@ -223,7 +231,6 @@ class GameBoard(RuleEngine, AI):
             if has_move: break
         
         if not has_move:
-            # Improved game over messages
             if self.mode == "vs AI":
                 if self.scores[1] > self.scores[2]:
                     title = "🎉 Congratulations!"
@@ -248,7 +255,6 @@ class GameBoard(RuleEngine, AI):
             
             messagebox.showinfo(title, message)
             self.root.after(1000, self.return_to_menu)
-
     def refresh(self):
         for r in range(self.grid_size):
             for c in range(self.grid_size):
@@ -256,17 +262,6 @@ class GameBoard(RuleEngine, AI):
                     self.buttons[r][c].config(bg="#34495e", fg="#ecf0f1", state="disabled", relief="sunken")
                 else:
                     self.buttons[r][c].config(bg="#ecf0f1", fg="#2c3e50", state="normal", relief="raised")
-
-    def undo(self):
-        if len(self.undo_stack) <= 1: 
-            messagebox.showinfo("Undo", "No more moves to undo!")
-            return
-        self.redo_stack.append(self.undo_stack.pop())
-        self.board = copy.deepcopy(self.undo_stack[-1])
-        self.current_player = 1
-        self.refresh()
-        self.update_status()
-
     def redo(self):
         if not self.redo_stack: 
             messagebox.showinfo("Redo", "No moves to redo!")
