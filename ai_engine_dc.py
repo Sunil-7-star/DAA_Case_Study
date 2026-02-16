@@ -54,9 +54,21 @@ class DivideConquerAI:
         self.save_state()
         self.make_black(move[0], move[1])
 
+def score(self, r, c):
+        num = self.numbers[r][c]
+        row = 0
+        col = 0
+        for j in range(self.grid_size):
+            if self.numbers[r][j] == num and self.board[r][j] == WHITE:
+                row += 1
+        for i in range(self.grid_size):
+            if self.numbers[i][c] == num and self.board[i][c] == WHITE:
+                col += 1
+        return row + col - 2
 
 
           
+
 
 
 
