@@ -80,90 +80,7 @@ class GameBoard(RuleEngine, AI):
                 b.bind("<Enter>", on_enter)
                 b.bind("<Leave>", on_leave)
                 self.buttons[r][c] = b
-
-    def create_controls(self):
-        ctrl = tk.Frame(self.root, bg="#2c3e50")
-        ctrl.pack(pady=15)
-        
-        btn_style = {
-            "font": ("Arial", 12, "bold"),
-            "width": 12,
-            "height": 1,
-            "relief": "raised",
-            "bd": 2
-        }
-        
-        tk.Button(ctrl, text="💡 Hint", command=self.show_hint, 
-                  bg="#f39c12", fg="white", **btn_style).pack(side="left", padx=5)
-        tk.Button(ctrl, text="↶ Undo", command=self.undo, 
-                  bg="#e74c3c", fg="white", **btn_style).pack(side="left", padx=5)
-        tk.Button(ctrl, text="↷ Redo", command=self.redo, 
-                  bg="#9b59b6", fg="white", **btn_style).pack(side="left", padx=5)
-        tk.Button(ctrl, text="🤖 Solve", command=self.solve_and_return, 
-                  bg="#27ae60", fg="white", **btn_style).pack(side="left", padx=5)
-
-    def create_status_bar(self):
-        self.status_var = tk.StringVar()
-        status_frame = tk.Frame(self.root, bg="#34495e")
-        status_frame.pack(side="bottom", fill="x")
-        tk.Label(status_frame, textvariable=self.status_var, font=("Arial", 13, "bold"),
-                 bg="#34495e", fg="#ecf0f1", pady=12).pack()
-
-    def update_status(self):
-        turn = "🎮 Your turn" if self.mode == "vs AI" and self.current_player == 1 else \
-               "🤖 AI thinking..." if self.mode == "vs AI" and self.current_player == 2 else \
-               f"Player {self.current_player}'s turn"
-        self.status_var.set(f"{turn}   |   Player 1: {self.scores[1]}   Player 2: {self.scores[2]}")
-
-    def human_move(self, r, c):
-        if self.board[r][c] != WHITE: return
-        if self.mode == "vs AI" and self.current_player != 1: return
-        if not self.is_duplicate(r, c):
-            messagebox.showwarning("Invalid Move", "Only duplicate numbers can be selected!\n\n"
-                                 f"The number {self.numbers[r][c]} must appear more than once "
-                                 "in its row or column among white cells.")
-            return
-        
-        # Check for adjacent black cells FIRST
-        if self.has_adjacent_black(r, c):
-            messagebox.showwarning("Invalid Move", "No two black squares can be adjacent!\n\n"
-                                 "Black cells cannot touch horizontally or vertically.")
-            return
-        
-        if not self.valid_black(r, c):
-            messagebox.showwarning("Invalid Move", "White cells must remain connected!\n\n"
-                                 "This move would isolate some white cells.")
-            return
-
-        self.save_state()
-        self.make_black(r, c)
-        self.scores[self.current_player] += 1
-        self.current_player = 3 - self.current_player
-        self.update_status()
-        self.check_game_over()
-
-        if self.mode == "vs AI" and self.current_player == 2:
-            self.root.after(700, self.ai_move)
-
-    def ai_move(self):
-        if self.current_player != 2 or self.mode != "vs AI": return
-        move = self.best_move()
-        if not move:
-            self.check_game_over()
-            return
-        r, c = move
-        self.save_state()
-        self.make_black(r, c)
-        self.scores[2] += 1
-        self.current_player = 1
-        self.update_status()
-        self.check_game_over()
-
-    def make_black(self, r, c):
-        self.board[r][c] = BLACK
-        self.buttons[r][c].config(bg="#34495e", fg="#ecf0f1", state="disabled", relief="sunken")
-
-    def solve_and_return(self):
+        def solve_and_return(self):
         """AI solves the puzzle and returns to start menu"""
         # Disable all buttons during solving
         for r in range(self.grid_size):
@@ -314,3 +231,86 @@ class GameBoard(RuleEngine, AI):
         self.current_player = 1
         self.refresh()
         self.update_status()
+
+    def create_controls(self):
+        ctrl = tk.Frame(self.root, bg="#2c3e50")
+        ctrl.pack(pady=15)
+        
+        btn_style = {
+            "font": ("Arial", 12, "bold"),
+            "width": 12,
+            "height": 1,
+            "relief": "raised",
+            "bd": 2
+        }
+        
+        tk.Button(ctrl, text="💡 Hint", command=self.show_hint, 
+                  bg="#f39c12", fg="white", **btn_style).pack(side="left", padx=5)
+        tk.Button(ctrl, text="↶ Undo", command=self.undo, 
+                  bg="#e74c3c", fg="white", **btn_style).pack(side="left", padx=5)
+        tk.Button(ctrl, text="↷ Redo", command=self.redo, 
+                  bg="#9b59b6", fg="white", **btn_style).pack(side="left", padx=5)
+        tk.Button(ctrl, text="🤖 Solve", command=self.solve_and_return, 
+                  bg="#27ae60", fg="white", **btn_style).pack(side="left", padx=5)
+
+    def create_status_bar(self):
+        self.status_var = tk.StringVar()
+        status_frame = tk.Frame(self.root, bg="#34495e")
+        status_frame.pack(side="bottom", fill="x")
+        tk.Label(status_frame, textvariable=self.status_var, font=("Arial", 13, "bold"),
+                 bg="#34495e", fg="#ecf0f1", pady=12).pack()
+
+    def update_status(self):
+        turn = "🎮 Your turn" if self.mode == "vs AI" and self.current_player == 1 else \
+               "🤖 AI thinking..." if self.mode == "vs AI" and self.current_player == 2 else \
+               f"Player {self.current_player}'s turn"
+        self.status_var.set(f"{turn}   |   Player 1: {self.scores[1]}   Player 2: {self.scores[2]}")
+
+    def human_move(self, r, c):
+        if self.board[r][c] != WHITE: return
+        if self.mode == "vs AI" and self.current_player != 1: return
+        if not self.is_duplicate(r, c):
+            messagebox.showwarning("Invalid Move", "Only duplicate numbers can be selected!\n\n"
+                                 f"The number {self.numbers[r][c]} must appear more than once "
+                                 "in its row or column among white cells.")
+            return
+        
+        # Check for adjacent black cells FIRST
+        if self.has_adjacent_black(r, c):
+            messagebox.showwarning("Invalid Move", "No two black squares can be adjacent!\n\n"
+                                 "Black cells cannot touch horizontally or vertically.")
+            return
+        
+        if not self.valid_black(r, c):
+            messagebox.showwarning("Invalid Move", "White cells must remain connected!\n\n"
+                                 "This move would isolate some white cells.")
+            return
+
+        self.save_state()
+        self.make_black(r, c)
+        self.scores[self.current_player] += 1
+        self.current_player = 3 - self.current_player
+        self.update_status()
+        self.check_game_over()
+
+        if self.mode == "vs AI" and self.current_player == 2:
+            self.root.after(700, self.ai_move)
+
+    def ai_move(self):
+        if self.current_player != 2 or self.mode != "vs AI": return
+        move = self.best_move()
+        if not move:
+            self.check_game_over()
+            return
+        r, c = move
+        self.save_state()
+        self.make_black(r, c)
+        self.scores[2] += 1
+        self.current_player = 1
+        self.update_status()
+        self.check_game_over()
+
+    def make_black(self, r, c):
+        self.board[r][c] = BLACK
+        self.buttons[r][c].config(bg="#34495e", fg="#ecf0f1", state="disabled", relief="sunken")
+
