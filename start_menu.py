@@ -154,64 +154,51 @@ class GameBoard(RuleEngine, AI):
 
     def solve_and_return(self):
         """AI solves the puzzle and returns to start menu"""
-        # Disable all buttons during solving
         for r in range(self.grid_size):
             for c in range(self.grid_size):
                 self.buttons[r][c].config(state="disabled")
-        
-        # Update status
         self.status_var.set("🤖 AI is solving the puzzle...")
         self.root.update()
-        
-        # Solve the puzzle with small delays to show moves
         def solve_step():
             m = self.best_move()
             if m is None:
-                # Puzzle solved - show message and return to menu
                 self.root.after(300, self.show_solve_complete)
-                return
-            
+                return      
             self.make_black(m[0], m[1])
             self.root.update()
-            # Schedule next move after a short delay
             self.root.after(200, solve_step)
-        
-        # Start solving
         self.root.after(300, solve_step)
-    
+    def return_to_menu(self):
+        """Return to the start menu"""
+        self.root.destroy()
+        from start_menu import StartMenu
+        menu_root = tk.Tk()
+        screen_width = menu_root.winfo_screenwidth()
+        screen_height = menu_root.winfo_screenheight()
+        window_width = min(600, int(screen_width * 0.7))
+        window_height = min(800, int(screen_height * 0.8))
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+        menu_root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        menu_root.configure(bg="#1a1a2e")
+        StartMenu(menu_root)
+        menu_root.mainloop()
     def show_solve_complete(self):
         """Show completion message and return to start menu"""
         messagebox.showinfo("Puzzle Solved! 🎉", 
                            "Well played! Try another puzzle! 🧩\n\n"
                            "Click OK to return to the main menu.")
         self.return_to_menu()
-    
-    def return_to_menu(self):
-        """Return to the start menu"""
-        self.root.destroy()
-        
-        # Import here to avoid circular imports
-        from start_menu import StartMenu
-        
-        menu_root = tk.Tk()
-        
-        # Get screen dimensions
-        screen_width = menu_root.winfo_screenwidth()
-        screen_height = menu_root.winfo_screenheight()
-        
-        # Set window size
-        window_width = min(600, int(screen_width * 0.7))
-        window_height = min(800, int(screen_height * 0.8))
-        
-        # Center the window
-        x = (screen_width - window_width) // 2
-        y = (screen_height - window_height) // 2
-        
-        menu_root.geometry(f"{window_width}x{window_height}+{x}+{y}")
-        menu_root.configure(bg="#1a1a2e")
-        
-        StartMenu(menu_root)
-        menu_root.mainloop()
+    def redo(self):
+        if not self.redo_stack: 
+            messagebox.showinfo("Redo", "No moves to redo!")
+            return
+        state = self.redo_stack.pop()
+        self.undo_stack.append(copy.deepcopy(state))
+        self.board = copy.deepcopy(state)
+        self.current_player = 1
+        self.refresh()
+        self.update_status()
     def undo(self):
         if len(self.undo_stack) <= 1: 
             messagebox.showinfo("Undo", "No more moves to undo!")
@@ -262,13 +249,3 @@ class GameBoard(RuleEngine, AI):
                     self.buttons[r][c].config(bg="#34495e", fg="#ecf0f1", state="disabled", relief="sunken")
                 else:
                     self.buttons[r][c].config(bg="#ecf0f1", fg="#2c3e50", state="normal", relief="raised")
-    def redo(self):
-        if not self.redo_stack: 
-            messagebox.showinfo("Redo", "No moves to redo!")
-            return
-        state = self.redo_stack.pop()
-        self.undo_stack.append(copy.deepcopy(state))
-        self.board = copy.deepcopy(state)
-        self.current_player = 1
-        self.refresh()
-        self.update_status()
