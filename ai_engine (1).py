@@ -1,7 +1,3 @@
-
-
-# Greedy AI, BFS Connectivity & Game Completion
-
 WHITE="white"; BLACK="black"
 
 class GreedyAI:
