@@ -140,8 +140,35 @@ class GameBoard(RuleEngine, AI):
         
         StartMenu(menu_root)
         menu_root.mainloop()
+    def refresh(self):
+        for r in range(self.grid_size):
+            for c in range(self.grid_size):
+                if self.board[r][c] == BLACK:
+                    self.buttons[r][c].config(bg="#34495e", fg="#ecf0f1", state="disabled", relief="sunken")
+                else:
+                    self.buttons[r][c].config(bg="#ecf0f1", fg="#2c3e50", state="normal", relief="raised")
 
-    def check_game_over(self):
+    def undo(self):
+        if len(self.undo_stack) <= 1: 
+            messagebox.showinfo("Undo", "No more moves to undo!")
+            return
+        self.redo_stack.append(self.undo_stack.pop())
+        self.board = copy.deepcopy(self.undo_stack[-1])
+        self.current_player = 1
+        self.refresh()
+        self.update_status()
+
+    def redo(self):
+        if not self.redo_stack: 
+            messagebox.showinfo("Redo", "No moves to redo!")
+            return
+        state = self.redo_stack.pop()
+        self.undo_stack.append(copy.deepcopy(state))
+        self.board = copy.deepcopy(state)
+        self.current_player = 1
+        self.refresh()
+        self.update_status()
+        def check_game_over(self):
         """Check if the game is over - no more valid moves available"""
         has_move = False
         valid_moves = []
@@ -202,35 +229,6 @@ class GameBoard(RuleEngine, AI):
             
             messagebox.showinfo(title, message)
             self.root.after(1000, self.return_to_menu)
-
-    def refresh(self):
-        for r in range(self.grid_size):
-            for c in range(self.grid_size):
-                if self.board[r][c] == BLACK:
-                    self.buttons[r][c].config(bg="#34495e", fg="#ecf0f1", state="disabled", relief="sunken")
-                else:
-                    self.buttons[r][c].config(bg="#ecf0f1", fg="#2c3e50", state="normal", relief="raised")
-
-    def undo(self):
-        if len(self.undo_stack) <= 1: 
-            messagebox.showinfo("Undo", "No more moves to undo!")
-            return
-        self.redo_stack.append(self.undo_stack.pop())
-        self.board = copy.deepcopy(self.undo_stack[-1])
-        self.current_player = 1
-        self.refresh()
-        self.update_status()
-
-    def redo(self):
-        if not self.redo_stack: 
-            messagebox.showinfo("Redo", "No moves to redo!")
-            return
-        state = self.redo_stack.pop()
-        self.undo_stack.append(copy.deepcopy(state))
-        self.board = copy.deepcopy(state)
-        self.current_player = 1
-        self.refresh()
-        self.update_status()
 
     def create_controls(self):
         ctrl = tk.Frame(self.root, bg="#2c3e50")
