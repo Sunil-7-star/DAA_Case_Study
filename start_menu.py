@@ -208,12 +208,13 @@ class GameBoard(RuleEngine, AI):
         self.current_player = 1
         self.refresh()
         self.update_status()
-    def check_game_over(self):
-        has_move = False
-        for i in range(self.grid_size):
-            for j in range(self.grid_size):
-                if self.board[i][j] == WHITE and self.is_duplicate(i, j) and self.valid_black(i, j):
-                    has_move =True
+    def check_game_over(self) :
+        has_move=False
+        for i in range(self.grid_size) :
+            for j in range(self.grid_size) :
+                if self.board[i][j]==WHITE and self.is_duplicate(i, j) and self.valid_black(i, j):
+                    has_move=True
+                    
                     break
             if has_move : break
         if not has_move :
@@ -225,7 +226,7 @@ class GameBoard(RuleEngine, AI):
                     title = "Game Over.."
                     message=f"AI Wins!\n\nYour Score: {self.scores[1]} moves\nAI Score: {self.scores[2]} moves\n\nBetter luck next time!"
                 else :
-                    title = " Game Over "
+                    title = " Game Over.. "
                     message=f"It's a Draw!\n\nBoth players: {self.scores[1]} moves\n\nGreat match!"
             else :
                 if self.scores[1] > self.scores[2] :
