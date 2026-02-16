@@ -1,247 +1,250 @@
-import copy
-import random
 import tkinter as tk
-from tkinter import messagebox
-from logic_rules import RuleEngine
+from tkinter import ttk
+from game_board import GameBoard
 
-from ai_engine_dc import DivideConquerAI as AI     # For Divide and Conquer
-from ai_engine_dp import DPAI as AI              # for Dynamic Programming
-
-WHITE = "white"
-BLACK = "black"
-HINT = "yellow"
-
-class GameBoard(RuleEngine, AI):
-    def __init__(self, root, size, difficulty, mode):
-        AI.__init__(self)
+class StartMenu:
+    def __init__(self, root):
         self.root = root
-        self.grid_size = size
-        self.difficulty = difficulty
-        self.mode = mode
-        self.current_player = 1
-        self.scores = {1: 0, 2: 0}
-
-        self.root.title(f"Singles - {self.mode}")
-        self.root.configure(bg="#2c3e50")
-
-        self.numbers = self.generate_grid()
-        self.board = [[WHITE] * size for _ in range(size)]
-        self.buttons = [[None] * size for _ in range(size)]
-        self.undo_stack = []
-        self.redo_stack = []
-
-        self.create_header()
-        self.create_board()
-        self.create_controls()
-        self.create_status_bar()
-        self.save_state()
-        self.update_status()
-
-        if self.mode == "vs AI" and self.current_player == 2:
-            self.root.after(600, self.ai_move)
-
-    def create_header(self):
-        header_frame = tk.Frame(self.root, bg="#34495e")
-        header_frame.pack(fill="x", pady=(0, 10))
-        tk.Label(header_frame, text="Singles - Competitive Game",
-                 font=("Helvetica", 20, "bold"), bg="#34495e", fg="#ecf0f1").pack(pady=15)
-
-    def generate_grid(self):
-        grid = [random.sample(range(1, 10), self.grid_size) for _ in range(self.grid_size)]
-        dup = {"Easy": 1, "Medium": 3, "Hard": 5}[self.difficulty]
-        for _ in range(dup):
-            r=random.randrange(self.grid_size)
-            c1,c2=random.sample(range(self.grid_size), 2)
-            grid[r][c2]=grid[r][c1]
-        return grid
-
-    def create_board(self):
-        frame = tk.Frame(self.root, bg="#2c3e50")
-        frame.pack(pady=20)
-        for r in range(self.grid_size):
-            for c in range(self.grid_size):
-                b = tk.Button(frame, text=str(self.numbers[r][c]), width=5, height=2,
-                              font=("Arial", 16, "bold"),
-                              command=lambda x=r, y=c: self.human_move(x, y),
-                              bg="#ecf0f1", fg="#2c3e50", relief="raised", bd=3,
-                              activebackground="#3498db", activeforeground="white")
-                b.grid(row=r, column=c, padx=3, pady=3)
-                
-                # Fixed hover effect with proper variable capture
-                def on_enter(event, row=r, col=c, btn=b):
-                    if self.board[row][col] == WHITE:
-                        btn.config(bg="#3498db", fg="white")
-                
-                def on_leave(event, row=r, col=c, btn=b):
-                    if self.board[row][col] == WHITE:
-                        btn.config(bg="#ecf0f1", fg="#2c3e50")
-                
-                b.bind("<Enter>", on_enter)
-                b.bind("<Leave>", on_leave)
-                self.buttons[r][c] = b
-
-    def create_controls(self):
-        ctrl = tk.Frame(self.root, bg="#2c3e50")
-        ctrl.pack(pady=15)
+        self.root.title("Singles - Game Setup")
         
-        btn_style = {
-            "font": ("Arial", 12, "bold"),
-            "width": 12,
-            "height": 1,
-            "relief": "raised",
-            "bd": 2
-        }
+        # Get screen dimensions
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
         
-        tk.Button(ctrl, text="💡 Hint", command=self.show_hint, 
-                  bg="#f39c12", fg="white", **btn_style).pack(side="left", padx=5)
-        tk.Button(ctrl, text="↶ Undo", command=self.undo, 
-                  bg="#e74c3c", fg="white", **btn_style).pack(side="left", padx=5)
-        tk.Button(ctrl, text="↷ Redo", command=self.redo, 
-                  bg="#9b59b6", fg="white", **btn_style).pack(side="left", padx=5)
-        tk.Button(ctrl, text="🤖 Solve", command=self.solve_and_return, 
-                  bg="#27ae60", fg="white", **btn_style).pack(side="left", padx=5)
-
-    def create_status_bar(self):
-        self.status_var = tk.StringVar()
-        status_frame = tk.Frame(self.root, bg="#34495e")
-        status_frame.pack(side="bottom", fill="x")
-        tk.Label(status_frame, textvariable=self.status_var, font=("Arial", 13, "bold"),
-                 bg="#34495e", fg="#ecf0f1", pady=12).pack()
-
-    def update_status(self):
-        turn = "🎮 Your turn" if self.mode == "vs AI" and self.current_player == 1 else \
-               "🤖 AI thinking..." if self.mode == "vs AI" and self.current_player == 2 else \
-               f"Player {self.current_player}'s turn"
-        self.status_var.set(f"{turn}   |   Player 1: {self.scores[1]}   Player 2: {self.scores[2]}")
-
-    def human_move(self, r, c):
-        if self.board[r][c] != WHITE: return
-        if self.mode == "vs AI" and self.current_player != 1: return
-        if not self.is_duplicate(r, c):
-            messagebox.showwarning("Invalid Move", "Only duplicate numbers can be selected!")
-            return
-        if not self.valid_black(r, c):
-            messagebox.showwarning("Invalid Move", "White cells must remain connected!")
-            return
-
-        self.save_state()
-        self.make_black(r, c)
-        self.scores[self.current_player] += 1
-        self.current_player = 3 - self.current_player
-        self.update_status()
-        self.check_game_over()
-
-        if self.mode == "vs AI" and self.current_player == 2:
-            self.root.after(700, self.ai_move)
-
-    def ai_move(self):
-        if self.current_player != 2 or self.mode != "vs AI": return
-        move = self.best_move()
-        if not move:
-            self.check_game_over()
-            return
-        r, c = move
-        self.save_state()
-        self.make_black(r, c)
-        self.scores[2] += 1
-        self.current_player = 1
-        self.update_status()
-        self.check_game_over()
-    def check_game_over(self) :
-        has_move=False
-        for i in range(self.grid_size) :
-            for j in range(self.grid_size) :
-                if self.board[i][j]==WHITE and self.is_duplicate(i, j) and self.valid_black(i, j):
-                    has_move=True
-                    break
-            if has_move : break
-        if not has_move :
-            if self.mode=="vs AI":
-                if self.scores[1] > self.scores[2] :
-                    title = "Congratulations!!"
-                    message=f"You Win!\n\nYour Score: {self.scores[1]} moves\nAI Score: {self.scores[2]} moves\n\nWell played!"
-                elif self.scores[1] < self.scores[2] :
-                    title = "Game Over.."
-                    message=f"AI Wins!\n\nYour Score: {self.scores[1]} moves\nAI Score: {self.scores[2]} moves\n\nBetter luck next time!"
-                else :
-                    title = " Game Over.. "
-                    message=f"It's a Draw!\n\nBoth players: {self.scores[1]} moves\n\nGreat match!"
-            else :
-                if self.scores[1] > self.scores[2] :
-                    title = "Player 1 Wins!!"
-                    message = f"Congratulations!\n\nPlayer 1: {self.scores[1]} moves\nPlayer 2: {self.scores[2]} moves"
-                elif self.scores[1]<self.scores[2] :
-                    title = "Player 2 Wins!!"
-                    message = f"Congratulations!\n\nPlayer 1: {self.scores[1]} moves\nPlayer 2: {self.scores[2]} moves"
-                else:
-                    title = "Game Over..."
-                    message=f"It's a Draw!!\n\nBoth players: {self.scores[1]} moves"
-            messagebox.showinfo( title, message )
-            self.root.after( 1000, self.return_to_menu )
-    def make_black(self, r, c):
-        self.board[r][c] = BLACK
-        self.buttons[r][c].config(bg="#34495e", fg="#ecf0f1", state="disabled", relief="sunken")
-
-    def solve_and_return(self):
-        """AI solves the puzzle and returns to start menu"""
-        for r in range(self.grid_size):
-            for c in range(self.grid_size):
-                self.buttons[r][c].config(state="disabled")
-        self.status_var.set("🤖 AI is solving the puzzle...")
-        self.root.update()
-        def solve_step():
-            m = self.best_move()
-            if m is None:
-                self.root.after(300, self.show_solve_complete)
-                return      
-            self.make_black(m[0], m[1])
-            self.root.update()
-            self.root.after(200, solve_step)
-        self.root.after(300, solve_step)
-    def return_to_menu(self):
-        """Return to the start menu"""
-        self.root.destroy()
-        from start_menu import StartMenu
-        menu_root = tk.Tk()
-        screen_width = menu_root.winfo_screenwidth()
-        screen_height = menu_root.winfo_screenheight()
+        # Set window size (70% of screen or max 600x800)
         window_width = min(600, int(screen_width * 0.7))
         window_height = min(800, int(screen_height * 0.8))
+        
+        # Center the window
         x = (screen_width - window_width) // 2
         y = (screen_height - window_height) // 2
-        menu_root.geometry(f"{window_width}x{window_height}+{x}+{y}")
-        menu_root.configure(bg="#1a1a2e")
-        StartMenu(menu_root)
-        menu_root.mainloop()
-    def show_solve_complete(self):
-        """Show completion message and return to start menu"""
-        messagebox.showinfo("Puzzle Solved! 🎉", 
-                           "Well played! Try another puzzle! 🧩\n\n"
-                           "Click OK to return to the main menu.")
-        self.return_to_menu()
-    def redo(self):
-        if not self.redo_stack: 
-            messagebox.showinfo("Redo", "No moves to redo!")
-            return
-        state = self.redo_stack.pop()
-        self.undo_stack.append(copy.deepcopy(state))
-        self.board = copy.deepcopy(state)
-        self.current_player = 1
-        self.refresh()
-        self.update_status()
-    def undo(self):
-        if len(self.undo_stack) <= 1: 
-            messagebox.showinfo("Undo", "No more moves to undo!")
-            return
-        self.redo_stack.append(self.undo_stack.pop())
-        self.board = copy.deepcopy(self.undo_stack[-1])
-        self.current_player = 1
-        self.refresh()
-        self.update_status()
-    def refresh(self) :
-        for r in range( self.grid_size ):
-            for c in range( self.grid_size ):
-                if self.board[r][c]==BLACK:
-                    self.buttons[r][c].config(bg="#34495e", fg="#ecf0f1", state="disabled", relief=" sunken ")
-                else :
-                    self.buttons[r][c].config(bg="#ecf0f1", fg="#2c3e50", state="normal", relief=" raised ")
+        
+        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.root.configure(bg="#1a1a2e")
+        self.root.resizable(True, True)
+
+        # Create a canvas with scrollbar
+        canvas = tk.Canvas(root, bg="#1a1a2e", highlightthickness=0)
+        scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
+        
+        # Main container frame inside canvas
+        main_frame = tk.Frame(canvas, bg="#1a1a2e")
+        
+        # Configure canvas
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Pack scrollbar and canvas
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+        
+        # Create window in canvas
+        canvas_frame = canvas.create_window((0, 0), window=main_frame, anchor="nw")
+        
+        # Configure scroll region
+        def configure_scroll_region(event=None):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            # Make the frame width match canvas width
+            canvas_width = event.width if event else canvas.winfo_width()
+            canvas.itemconfig(canvas_frame, width=canvas_width)
+        
+        main_frame.bind("<Configure>", configure_scroll_region)
+        canvas.bind("<Configure>", configure_scroll_region)
+        
+        # Mouse wheel scrolling
+        def on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        canvas.bind_all("<MouseWheel>", on_mousewheel)
+
+        # Add padding to main frame
+        content_frame = tk.Frame(main_frame, bg="#1a1a2e")
+        content_frame.pack(fill="both", expand=True, padx=30, pady=20)
+
+        # Title Section
+        title_frame = tk.Frame(content_frame, bg="#16213e", relief="ridge", bd=3)
+        title_frame.pack(fill="x", pady=(0, 25))
+        
+        tk.Label(title_frame, text="🎮 SINGLES", 
+                 font=("Helvetica", 38, "bold"), 
+                 bg="#16213e", fg="#00d9ff").pack(pady=20)
+        tk.Label(title_frame, text="The Number Puzzle Challenge", 
+                 font=("Arial", 14, "italic"), 
+                 bg="#16213e", fg="#e94560").pack(pady=(0, 20))
+
+        # Grid Size Section
+        self.create_section(content_frame, "🎯 Select Grid Size", 
+                           self.create_grid_options)
+
+        # Difficulty Section
+        self.create_section(content_frame, "⚡ Select Difficulty", 
+                           self.create_difficulty_options)
+
+        # Game Mode Section
+        self.create_section(content_frame, "👥 Game Mode", 
+                           self.create_mode_options)
+
+        # Start Button - More prominent
+        button_container = tk.Frame(content_frame, bg="#1a1a2e")
+        button_container.pack(pady=35, fill="x")
+        
+        start_btn = tk.Button(button_container, text="⭐ START GAME ⭐", 
+                             font=("Arial", 20, "bold"),
+                             bg="#00d9ff", fg="#1a1a2e", 
+                             activebackground="#00b8d4",
+                             activeforeground="#1a1a2e",
+                             width=20, height=2,
+                             relief="raised", bd=6,
+                             cursor="hand2",
+                             command=self.start_game)
+        start_btn.pack(pady=10)
+        
+        # Hover effects for start button
+        def on_enter(e):
+            start_btn.config(bg="#00b8d4", font=("Arial", 21, "bold"))
+        
+        def on_leave(e):
+            start_btn.config(bg="#00d9ff", font=("Arial", 20, "bold"))
+        
+        start_btn.bind("<Enter>", on_enter)
+        start_btn.bind("<Leave>", on_leave)
+
+        # Footer
+        footer_frame = tk.Frame(content_frame, bg="#1a1a2e")
+        footer_frame.pack(pady=20, fill="x")
+        tk.Label(footer_frame, text="Enjoy the challenge! 🧠✨", 
+                 font=("Arial", 12), 
+                 bg="#1a1a2e", fg="#888888").pack()
+        
+        # Instructions
+        tk.Label(footer_frame, text="Scroll down if you don't see all options", 
+                 font=("Arial", 9, "italic"), 
+                 bg="#1a1a2e", fg="#666666").pack(pady=(5, 0))
+        
+        # Update scroll region after everything is added
+        root.update_idletasks()
+        canvas.configure(scrollregion=canvas.bbox("all"))
+
+    def create_section(self, parent, title, content_creator):
+        """Helper method to create styled sections"""
+        section_frame = tk.Frame(parent, bg="#16213e", relief="groove", bd=3)
+        section_frame.pack(fill="x", pady=15, padx=5)
+        
+        tk.Label(section_frame, text=title, 
+                 font=("Arial", 16, "bold"), 
+                 bg="#16213e", fg="#00d9ff").pack(anchor="w", padx=20, pady=(15, 10))
+        
+        content_frame = tk.Frame(section_frame, bg="#0f3460")
+        content_frame.pack(fill="x", padx=20, pady=(0, 15))
+        
+        content_creator(content_frame)
+
+    def create_grid_options(self, parent):
+        """Create grid size radio buttons"""
+        self.size_var = tk.IntVar(value=5)
+        
+        grid_frame = tk.Frame(parent, bg="#0f3460")
+        grid_frame.pack(pady=12)
+        
+        for i, s in enumerate([4, 5, 6, 7]):
+            rb = tk.Radiobutton(grid_frame, 
+                               text=f"{s} × {s}", 
+                               variable=self.size_var, 
+                               value=s,
+                               font=("Arial", 14, "bold"), 
+                               bg="#0f3460", 
+                               fg="#ffffff",
+                               selectcolor="#e94560",
+                               activebackground="#0f3460",
+                               activeforeground="#00d9ff",
+                               cursor="hand2",
+                               padx=12, pady=8)
+            rb.grid(row=0, column=i, padx=18, pady=8)
+
+    def create_difficulty_options(self, parent):
+        """Create difficulty radio buttons"""
+        self.diff_var = tk.StringVar(value="Medium")
+        
+        diff_frame = tk.Frame(parent, bg="#0f3460")
+        diff_frame.pack(pady=12)
+        
+        difficulties = [
+            ("Easy", "🟢"),
+            ("Medium", "🟡"),
+            ("Hard", "🔴")
+        ]
+        
+        for i, (d, emoji) in enumerate(difficulties):
+            rb = tk.Radiobutton(diff_frame, 
+                               text=f"{emoji} {d}", 
+                               variable=self.diff_var, 
+                               value=d,
+                               font=("Arial", 14, "bold"), 
+                               bg="#0f3460", 
+                               fg="#ffffff",
+                               selectcolor="#e94560",
+                               activebackground="#0f3460",
+                               activeforeground="#00d9ff",
+                               cursor="hand2",
+                               padx=12, pady=8)
+            rb.grid(row=0, column=i, padx=22, pady=8)
+
+    def create_mode_options(self, parent):
+        """Create game mode radio buttons"""
+        self.mode_var = tk.StringVar(value="vs AI")
+        
+        mode_frame = tk.Frame(parent, bg="#0f3460")
+        mode_frame.pack(pady=12)
+        
+        modes = [
+            ("vs AI", "🤖 Human vs AI"),
+            ("2p", "👥 2 Players")
+        ]
+        
+        for i, (value, text) in enumerate(modes):
+            rb = tk.Radiobutton(mode_frame, 
+                               text=text, 
+                               variable=self.mode_var, 
+                               value=value,
+                               font=("Arial", 14, "bold"), 
+                               bg="#0f3460", 
+                               fg="#ffffff",
+                               selectcolor="#e94560",
+                               activebackground="#0f3460",
+                               activeforeground="#00d9ff",
+                               cursor="hand2",
+                               padx=15, pady=8)
+            rb.grid(row=0, column=i, padx=28, pady=8)
+
+    def start_game(self):
+        """Start the game with selected options"""
+        size = self.size_var.get()
+        diff = self.diff_var.get()
+        mode = self.mode_var.get()
+        
+        # Unbind mousewheel before destroying
+        self.root.unbind_all("<MouseWheel>")
+        self.root.destroy()
+        
+        # Create game window
+        game_root = tk.Tk()
+        
+        # Get screen dimensions for game window
+        screen_width = game_root.winfo_screenwidth()
+        screen_height = game_root.winfo_screenheight()
+        
+        # Set game window size based on grid size
+        if size <= 5:
+            game_width = min(900, int(screen_width * 0.75))
+            game_height = min(950, int(screen_height * 0.85))
+        else:
+            game_width = min(1000, int(screen_width * 0.8))
+            game_height = min(1050, int(screen_height * 0.9))
+        
+        # Center game window
+        x = (screen_width - game_width) // 2
+        y = (screen_height - game_height) // 2
+        
+        game_root.geometry(f"{game_width}x{game_height}+{x}+{y}")
+        game_root.configure(bg="#2c3e50")
+        GameBoard(game_root, size, diff, mode)
+        game_root.mainloop()
