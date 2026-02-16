@@ -229,20 +229,20 @@ class GameBoard(RuleEngine, AI):
                     message = f"It's a Draw!\n\nBoth players: {self.scores[1]} moves\n\nGreat match!"
             else:
                 if self.scores[1] > self.scores[2]:
-                    title = "Player 1 Wins!"
+                    title = "Player 1 Wins!!"
                     message = f"Congratulations!\n\nPlayer 1: {self.scores[1]} moves\nPlayer 2: {self.scores[2]} moves"
-                elif self.scores[1] < self.scores[2]:
-                    title = "Player 2 Wins!"
+                elif self.scores[1]<self.scores[2]:
+                    title = "Player 2 Wins!!"
                     message = f"Congratulations!\n\nPlayer 1: {self.scores[1]} moves\nPlayer 2: {self.scores[2]} moves"
                 else:
-                    title = "Game Over"
-                    message = f"It's a Draw!\n\nBoth players: {self.scores[1]} moves"
-            messagebox.showinfo(title, message)
-            self.root.after(1000, self.return_to_menu)
+                    title = "Game Over..."
+                    message = f"It's a Draw!!\n\nBoth players: {self.scores[1]} moves"
+            messagebox.showinfo( title, message )
+            self.root.after( 1000, self.return_to_menu )
     def refresh(self):
-        for r in range(self.grid_size):
-            for c in range(self.grid_size):
-                if self.board[r][c] == BLACK:
-                    self.buttons[r][c].config(bg="#34495e", fg="#ecf0f1", state="disabled", relief="sunken")
-                else:
-                    self.buttons[r][c].config(bg="#ecf0f1", fg="#2c3e50", state="normal", relief="raised")
+        for r in range( self.grid_size ):
+            for c in range( self.grid_size ):
+                if self.board[r][c]==BLACK:
+                    self.buttons[r][c].config(bg="#34495e", fg="#ecf0f1", state="disabled", relief=" sunken ")
+                else :
+                    self.buttons[r][c].config(bg="#ecf0f1", fg="#2c3e50", state="normal", relief=" raised ")
