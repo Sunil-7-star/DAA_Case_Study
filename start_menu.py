@@ -222,7 +222,7 @@ class GameBoard(RuleEngine, AI):
                     title = "Congratulations!!"
                     message=f"You Win!\n\nYour Score: {self.scores[1]} moves\nAI Score: {self.scores[2]} moves\n\nWell played!"
                 elif self.scores[1] < self.scores[2] :
-                    title = "Game Over"
+                    title = "Game Over.."
                     message=f"AI Wins!\n\nYour Score: {self.scores[1]} moves\nAI Score: {self.scores[2]} moves\n\nBetter luck next time!"
                 else :
                     title = " Game Over "
@@ -236,7 +236,7 @@ class GameBoard(RuleEngine, AI):
                     message = f"Congratulations!\n\nPlayer 1: {self.scores[1]} moves\nPlayer 2: {self.scores[2]} moves"
                 else:
                     title = "Game Over..."
-                    message = f"It's a Draw!!\n\nBoth players: {self.scores[1]} moves"
+                    message=f"It's a Draw!!\n\nBoth players: {self.scores[1]} moves"
             messagebox.showinfo( title, message )
             self.root.after( 1000, self.return_to_menu )
     def refresh(self) :
