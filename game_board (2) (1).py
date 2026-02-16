@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import messagebox
 from logic_rules import RuleEngine
 
-# Switch between D&C or DP by changing this one line
+from ai_engine import GreedyAI as AI
 from ai_engine_dc import DivideConquerAI as AI     # For Divide and Conquer
 from ai_engine_dp import DPAI as AI              # Uncomment for Dynamic Programming
 
@@ -119,10 +119,20 @@ class GameBoard(RuleEngine, AI):
         if self.board[r][c] != WHITE: return
         if self.mode == "vs AI" and self.current_player != 1: return
         if not self.is_duplicate(r, c):
-            messagebox.showwarning("Invalid Move", "Only duplicate numbers can be selected!")
+            messagebox.showwarning("Invalid Move", "Only duplicate numbers can be selected!\n\n"
+                                 f"The number {self.numbers[r][c]} must appear more than once "
+                                 "in its row or column among white cells.")
             return
+        
+        # Check for adjacent black cells FIRST
+        if self.has_adjacent_black(r, c):
+            messagebox.showwarning("Invalid Move", "No two black squares can be adjacent!\n\n"
+                                 "Black cells cannot touch horizontally or vertically.")
+            return
+        
         if not self.valid_black(r, c):
-            messagebox.showwarning("Invalid Move", "White cells must remain connected!")
+            messagebox.showwarning("Invalid Move", "White cells must remain connected!\n\n"
+                                 "This move would isolate some white cells.")
             return
 
         self.save_state()
@@ -215,16 +225,42 @@ class GameBoard(RuleEngine, AI):
         menu_root.mainloop()
 
     def check_game_over(self):
+        """Check if the game is over - no more valid moves available"""
         has_move = False
+        valid_moves = []
+        
+        # Check all white cells
         for i in range(self.grid_size):
             for j in range(self.grid_size):
-                if self.board[i][j] == WHITE and self.is_duplicate(i, j) and self.valid_black(i, j):
-                    has_move = True
-                    break
-            if has_move: break
+                if self.board[i][j] == WHITE:
+                    # Check if this is a duplicate
+                    is_dup = self.is_duplicate(i, j)
+                    # Check if it can be validly blacked
+                    can_black = self.valid_black(i, j) if is_dup else False
+                    
+                    if is_dup and can_black:
+                        has_move = True
+                        valid_moves.append((i, j, self.numbers[i][j]))
+                        
+        # Debug: Print valid moves (you can remove this later)
+        if not has_move:
+            print(f"Game Over Check: No valid moves found")
+            print(f"Current board state:")
+            for i in range(self.grid_size):
+                row_str = ""
+                for j in range(self.grid_size):
+                    if self.board[i][j] == BLACK:
+                        row_str += "  X  "
+                    else:
+                        row_str += f" {self.numbers[i][j]:2d}  "
+                print(row_str)
+        else:
+            print(f"Valid moves available: {len(valid_moves)}")
+            for r, c, num in valid_moves[:3]:  # Show first 3
+                print(f"  - Position ({r},{c}) = {num}")
         
         if not has_move:
-            # Improved game over messages
+            # Game is over - show results
             if self.mode == "vs AI":
                 if self.scores[1] > self.scores[2]:
                     title = "🎉 Congratulations!"
