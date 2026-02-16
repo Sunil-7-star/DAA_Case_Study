@@ -40,19 +40,23 @@ class DivideConquerAI:
         b.config(bg="yellow")
         self.root.after(1500, lambda: b.config(bg=old))
 
-  def ai_move(self):
-        move = self.best_move()
-        if move is None:
-            return
-        self.save_state()
-        self.make_black(move[0], move[1])
-
     def solve(self):
         while True:
             m = self.best_move()
             if m is None:
                 break
             self.make_black(m[0], m[1])
+
+    def ai_move(self):
+        move = self.best_move()
+        if move is None:
+            return
+        self.save_state()
+        self.make_black(move[0], move[1])
+
+
+
           
+
 
 
