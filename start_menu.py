@@ -147,7 +147,37 @@ class GameBoard(RuleEngine, AI):
         self.current_player = 1
         self.update_status()
         self.check_game_over()
-
+    def check_game_over(self) :
+        has_move=False
+        for i in range(self.grid_size) :
+            for j in range(self.grid_size) :
+                if self.board[i][j]==WHITE and self.is_duplicate(i, j) and self.valid_black(i, j):
+                    has_move=True
+                    break
+            if has_move : break
+        if not has_move :
+            if self.mode=="vs AI":
+                if self.scores[1] > self.scores[2] :
+                    title = "Congratulations!!"
+                    message=f"You Win!\n\nYour Score: {self.scores[1]} moves\nAI Score: {self.scores[2]} moves\n\nWell played!"
+                elif self.scores[1] < self.scores[2] :
+                    title = "Game Over.."
+                    message=f"AI Wins!\n\nYour Score: {self.scores[1]} moves\nAI Score: {self.scores[2]} moves\n\nBetter luck next time!"
+                else :
+                    title = " Game Over.. "
+                    message=f"It's a Draw!\n\nBoth players: {self.scores[1]} moves\n\nGreat match!"
+            else :
+                if self.scores[1] > self.scores[2] :
+                    title = "Player 1 Wins!!"
+                    message = f"Congratulations!\n\nPlayer 1: {self.scores[1]} moves\nPlayer 2: {self.scores[2]} moves"
+                elif self.scores[1]<self.scores[2] :
+                    title = "Player 2 Wins!!"
+                    message = f"Congratulations!\n\nPlayer 1: {self.scores[1]} moves\nPlayer 2: {self.scores[2]} moves"
+                else:
+                    title = "Game Over..."
+                    message=f"It's a Draw!!\n\nBoth players: {self.scores[1]} moves"
+            messagebox.showinfo( title, message )
+            self.root.after( 1000, self.return_to_menu )
     def make_black(self, r, c):
         self.board[r][c] = BLACK
         self.buttons[r][c].config(bg="#34495e", fg="#ecf0f1", state="disabled", relief="sunken")
@@ -208,37 +238,6 @@ class GameBoard(RuleEngine, AI):
         self.current_player = 1
         self.refresh()
         self.update_status()
-    def check_game_over(self) :
-        has_move=False
-        for i in range(self.grid_size) :
-            for j in range(self.grid_size) :
-                if self.board[i][j]==WHITE and self.is_duplicate(i, j) and self.valid_black(i, j):
-                    has_move=True
-                    break
-            if has_move : break
-        if not has_move :
-            if self.mode=="vs AI":
-                if self.scores[1] > self.scores[2] :
-                    title = "Congratulations!!"
-                    message=f"You Win!\n\nYour Score: {self.scores[1]} moves\nAI Score: {self.scores[2]} moves\n\nWell played!"
-                elif self.scores[1] < self.scores[2] :
-                    title = "Game Over.."
-                    message=f"AI Wins!\n\nYour Score: {self.scores[1]} moves\nAI Score: {self.scores[2]} moves\n\nBetter luck next time!"
-                else :
-                    title = " Game Over.. "
-                    message=f"It's a Draw!\n\nBoth players: {self.scores[1]} moves\n\nGreat match!"
-            else :
-                if self.scores[1] > self.scores[2] :
-                    title = "Player 1 Wins!!"
-                    message = f"Congratulations!\n\nPlayer 1: {self.scores[1]} moves\nPlayer 2: {self.scores[2]} moves"
-                elif self.scores[1]<self.scores[2] :
-                    title = "Player 2 Wins!!"
-                    message = f"Congratulations!\n\nPlayer 1: {self.scores[1]} moves\nPlayer 2: {self.scores[2]} moves"
-                else:
-                    title = "Game Over..."
-                    message=f"It's a Draw!!\n\nBoth players: {self.scores[1]} moves"
-            messagebox.showinfo( title, message )
-            self.root.after( 1000, self.return_to_menu )
     def refresh(self) :
         for r in range( self.grid_size ):
             for c in range( self.grid_size ):
