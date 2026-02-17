@@ -1,250 +1,215 @@
 import tkinter as tk
-from tkinter import ttk
 from game_board import GameBoard
 
 class StartMenu:
     def __init__(self, root):
         self.root = root
         self.root.title("Singles - Game Setup")
-        
-        # Get screen dimensions
-        screen_width = root.winfo_screenwidth()
+
+        screen_width  = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
-        
-        # Set window size (70% of screen or max 600x800)
-        window_width = min(600, int(screen_width * 0.7))
-        window_height = min(800, int(screen_height * 0.8))
-        
-        # Center the window
-        x = (screen_width - window_width) // 2
-        y = (screen_height - window_height) // 2
-        
-        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        win_w = min(640, int(screen_width  * 0.70))
+        win_h = min(900, int(screen_height * 0.90))
+        x = (screen_width  - win_w) // 2
+        y = (screen_height - win_h) // 2
+        self.root.geometry(f"{win_w}x{win_h}+{x}+{y}")
         self.root.configure(bg="#1a1a2e")
         self.root.resizable(True, True)
 
-        # Create a canvas with scrollbar
+        # scrollable canvas
         canvas = tk.Canvas(root, bg="#1a1a2e", highlightthickness=0)
-        scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
-        
-        # Main container frame inside canvas
-        main_frame = tk.Frame(canvas, bg="#1a1a2e")
-        
-        # Configure canvas
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        # Pack scrollbar and canvas
-        scrollbar.pack(side="right", fill="y")
+        sb     = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=sb.set)
+        sb.pack(side="right", fill="y")
         canvas.pack(side="left", fill="both", expand=True)
-        
-        # Create window in canvas
-        canvas_frame = canvas.create_window((0, 0), window=main_frame, anchor="nw")
-        
-        # Configure scroll region
-        def configure_scroll_region(event=None):
+
+        outer = tk.Frame(canvas, bg="#1a1a2e")
+        cwin  = canvas.create_window((0, 0), window=outer, anchor="nw")
+
+        def _on_frame(e):
             canvas.configure(scrollregion=canvas.bbox("all"))
-            # Make the frame width match canvas width
-            canvas_width = event.width if event else canvas.winfo_width()
-            canvas.itemconfig(canvas_frame, width=canvas_width)
-        
-        main_frame.bind("<Configure>", configure_scroll_region)
-        canvas.bind("<Configure>", configure_scroll_region)
-        
-        # Mouse wheel scrolling
-        def on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        
-        canvas.bind_all("<MouseWheel>", on_mousewheel)
+        def _on_canvas(e):
+            canvas.itemconfig(cwin, width=e.width)
+        outer.bind("<Configure>", _on_frame)
+        canvas.bind("<Configure>", _on_canvas)
+        canvas.bind_all("<MouseWheel>",
+                        lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
 
-        # Add padding to main frame
-        content_frame = tk.Frame(main_frame, bg="#1a1a2e")
-        content_frame.pack(fill="both", expand=True, padx=30, pady=20)
+        # content frame
+        cf = tk.Frame(outer, bg="#1a1a2e")
+        cf.pack(fill="both", expand=True, padx=30, pady=20)
 
-        # Title Section
-        title_frame = tk.Frame(content_frame, bg="#16213e", relief="ridge", bd=3)
-        title_frame.pack(fill="x", pady=(0, 25))
-        
-        tk.Label(title_frame, text="🎮 SINGLES", 
-                 font=("Helvetica", 38, "bold"), 
-                 bg="#16213e", fg="#00d9ff").pack(pady=20)
-        tk.Label(title_frame, text="The Number Puzzle Challenge", 
-                 font=("Arial", 14, "italic"), 
-                 bg="#16213e", fg="#e94560").pack(pady=(0, 20))
+        # title
+        title_frame = tk.Frame(cf, bg="#16213e", relief="ridge", bd=3)
+        title_frame.pack(fill="x", pady=(0, 20))
+        tk.Label(title_frame, text="🎮 SINGLES",
+                 font=("Helvetica", 36, "bold"),
+                 bg="#16213e", fg="#00d9ff").pack(pady=18)
+        tk.Label(title_frame, text="The Number Puzzle Challenge",
+                 font=("Arial", 13, "italic"),
+                 bg="#16213e", fg="#e94560").pack(pady=(0, 18))
 
-        # Grid Size Section
-        self.create_section(content_frame, "🎯 Select Grid Size", 
-                           self.create_grid_options)
+        # all sections
+        self.create_section(cf, "🎯 Select Grid Size",  self._grid_opts)
+        self.create_section(cf, "⚡ Select Difficulty",  self._diff_opts)
+        self.create_section(cf, "👥 Game Mode",          self._mode_opts)
+        self.create_section(cf, "🧠 AI Strategy",        self._strategy_opts)
 
-        # Difficulty Section
-        self.create_section(content_frame, "⚡ Select Difficulty", 
-                           self.create_difficulty_options)
+        # start button
+        btn_frame = tk.Frame(cf, bg="#1a1a2e")
+        btn_frame.pack(pady=30, fill="x")
+        self._start_btn = tk.Button(
+            btn_frame, text="⭐ START GAME ⭐",
+            font=("Arial", 19, "bold"),
+            bg="#00d9ff", fg="#1a1a2e",
+            activebackground="#00b8d4", activeforeground="#1a1a2e",
+            width=20, height=2, relief="raised", bd=6,
+            cursor="hand2", command=self.start_game)
+        self._start_btn.pack(pady=8)
+        self._start_btn.bind("<Enter>",
+            lambda e: self._start_btn.config(bg="#00b8d4", font=("Arial", 20, "bold")))
+        self._start_btn.bind("<Leave>",
+            lambda e: self._start_btn.config(bg="#00d9ff", font=("Arial", 19, "bold")))
 
-        # Game Mode Section
-        self.create_section(content_frame, "👥 Game Mode", 
-                           self.create_mode_options)
+        # footer
+        ftr = tk.Frame(cf, bg="#1a1a2e")
+        ftr.pack(pady=15, fill="x")
+        tk.Label(ftr, text="Enjoy the challenge! 🧠✨",
+                 font=("Arial", 11), bg="#1a1a2e", fg="#888888").pack()
+        tk.Label(ftr, text="Scroll down if any section is hidden",
+                 font=("Arial", 9, "italic"), bg="#1a1a2e", fg="#555555").pack(pady=(4, 0))
 
-        # Start Button - More prominent
-        button_container = tk.Frame(content_frame, bg="#1a1a2e")
-        button_container.pack(pady=35, fill="x")
-        
-        start_btn = tk.Button(button_container, text="⭐ START GAME ⭐", 
-                             font=("Arial", 20, "bold"),
-                             bg="#00d9ff", fg="#1a1a2e", 
-                             activebackground="#00b8d4",
-                             activeforeground="#1a1a2e",
-                             width=20, height=2,
-                             relief="raised", bd=6,
-                             cursor="hand2",
-                             command=self.start_game)
-        start_btn.pack(pady=10)
-        
-        # Hover effects for start button
-        def on_enter(e):
-            start_btn.config(bg="#00b8d4", font=("Arial", 21, "bold"))
-        
-        def on_leave(e):
-            start_btn.config(bg="#00d9ff", font=("Arial", 20, "bold"))
-        
-        start_btn.bind("<Enter>", on_enter)
-        start_btn.bind("<Leave>", on_leave)
-
-        # Footer
-        footer_frame = tk.Frame(content_frame, bg="#1a1a2e")
-        footer_frame.pack(pady=20, fill="x")
-        tk.Label(footer_frame, text="Enjoy the challenge! 🧠✨", 
-                 font=("Arial", 12), 
-                 bg="#1a1a2e", fg="#888888").pack()
-        
-        # Instructions
-        tk.Label(footer_frame, text="Scroll down if you don't see all options", 
-                 font=("Arial", 9, "italic"), 
-                 bg="#1a1a2e", fg="#666666").pack(pady=(5, 0))
-        
-        # Update scroll region after everything is added
         root.update_idletasks()
         canvas.configure(scrollregion=canvas.bbox("all"))
 
-    def create_section(self, parent, title, content_creator):
-        """Helper method to create styled sections"""
-        section_frame = tk.Frame(parent, bg="#16213e", relief="groove", bd=3)
-        section_frame.pack(fill="x", pady=15, padx=5)
-        
-        tk.Label(section_frame, text=title, 
-                 font=("Arial", 16, "bold"), 
-                 bg="#16213e", fg="#00d9ff").pack(anchor="w", padx=20, pady=(15, 10))
-        
-        content_frame = tk.Frame(section_frame, bg="#0f3460")
-        content_frame.pack(fill="x", padx=20, pady=(0, 15))
-        
-        content_creator(content_frame)
+    # section builder
+    def create_section(self, parent, title, builder):
+        frame = tk.Frame(parent, bg="#16213e", relief="groove", bd=3)
+        frame.pack(fill="x", pady=12, padx=4)
+        tk.Label(frame, text=title,
+                 font=("Arial", 15, "bold"),
+                 bg="#16213e", fg="#00d9ff").pack(anchor="w", padx=18, pady=(12, 8))
+        inner = tk.Frame(frame, bg="#0f3460")
+        inner.pack(fill="x", padx=18, pady=(0, 12))
+        builder(inner)
 
-    def create_grid_options(self, parent):
-        """Create grid size radio buttons"""
+    # shared radio helper
+    def _rb(self, parent, text, var, val, col):
+        tk.Radiobutton(
+            parent, text=text, variable=var, value=val,
+            font=("Arial", 13, "bold"),
+            bg="#0f3460", fg="#ffffff",
+            selectcolor="#e94560",
+            activebackground="#0f3460", activeforeground="#00d9ff",
+            cursor="hand2", padx=10, pady=6
+        ).grid(row=0, column=col, padx=14, pady=8)
+
+    # grid size
+    def _grid_opts(self, parent):
         self.size_var = tk.IntVar(value=5)
-        
-        grid_frame = tk.Frame(parent, bg="#0f3460")
-        grid_frame.pack(pady=12)
-        
+        row = tk.Frame(parent, bg="#0f3460")
+        row.pack(pady=10)
         for i, s in enumerate([4, 5, 6, 7]):
-            rb = tk.Radiobutton(grid_frame, 
-                               text=f"{s} × {s}", 
-                               variable=self.size_var, 
-                               value=s,
-                               font=("Arial", 14, "bold"), 
-                               bg="#0f3460", 
-                               fg="#ffffff",
-                               selectcolor="#e94560",
-                               activebackground="#0f3460",
-                               activeforeground="#00d9ff",
-                               cursor="hand2",
-                               padx=12, pady=8)
-            rb.grid(row=0, column=i, padx=18, pady=8)
+            self._rb(row, f"{s} × {s}", self.size_var, s, i)
 
-    def create_difficulty_options(self, parent):
-        """Create difficulty radio buttons"""
+    # difficulty
+    def _diff_opts(self, parent):
         self.diff_var = tk.StringVar(value="Medium")
-        
-        diff_frame = tk.Frame(parent, bg="#0f3460")
-        diff_frame.pack(pady=12)
-        
-        difficulties = [
-            ("Easy", "🟢"),
-            ("Medium", "🟡"),
-            ("Hard", "🔴")
-        ]
-        
-        for i, (d, emoji) in enumerate(difficulties):
-            rb = tk.Radiobutton(diff_frame, 
-                               text=f"{emoji} {d}", 
-                               variable=self.diff_var, 
-                               value=d,
-                               font=("Arial", 14, "bold"), 
-                               bg="#0f3460", 
-                               fg="#ffffff",
-                               selectcolor="#e94560",
-                               activebackground="#0f3460",
-                               activeforeground="#00d9ff",
-                               cursor="hand2",
-                               padx=12, pady=8)
-            rb.grid(row=0, column=i, padx=22, pady=8)
+        row = tk.Frame(parent, bg="#0f3460")
+        row.pack(pady=10)
+        for i, (d, em) in enumerate([("Easy","🟢"),("Medium","🟡"),("Hard","🔴")]):
+            self._rb(row, f"{em} {d}", self.diff_var, d, i)
 
-    def create_mode_options(self, parent):
-        """Create game mode radio buttons"""
+    # game mode
+    def _mode_opts(self, parent):
         self.mode_var = tk.StringVar(value="vs AI")
-        
-        mode_frame = tk.Frame(parent, bg="#0f3460")
-        mode_frame.pack(pady=12)
-        
-        modes = [
-            ("vs AI", "🤖 Human vs AI"),
-            ("2p", "👥 2 Players")
-        ]
-        
-        for i, (value, text) in enumerate(modes):
-            rb = tk.Radiobutton(mode_frame, 
-                               text=text, 
-                               variable=self.mode_var, 
-                               value=value,
-                               font=("Arial", 14, "bold"), 
-                               bg="#0f3460", 
-                               fg="#ffffff",
-                               selectcolor="#e94560",
-                               activebackground="#0f3460",
-                               activeforeground="#00d9ff",
-                               cursor="hand2",
-                               padx=15, pady=8)
-            rb.grid(row=0, column=i, padx=28, pady=8)
+        row = tk.Frame(parent, bg="#0f3460")
+        row.pack(pady=10)
+        for i, (val, lbl) in enumerate([("vs AI","🤖 Human vs AI"),("2p","👥 2 Players")]):
+            self._rb(row, lbl, self.mode_var, val, i)
 
+    # AI strategy — clickable cards with description
+    def _strategy_opts(self, parent):
+        self.strategy_var = tk.StringVar(value="Divide & Conquer")
+
+        strategies = [
+            ("Greedy",
+             "⚡ Greedy",
+             "#e67e22",
+             "Picks the move that\neliminates the most\nduplicates instantly.\nFast, not always optimal."),
+            ("Divide & Conquer",
+             "🔀 Divide & Conquer",
+             "#2980b9",
+             "Splits candidates\nrecursively to find\nthe best move.\nBalanced & efficient."),
+            ("Dynamic Programming",
+             "🧮 Dynamic Prog.",
+             "#8e44ad",
+             "Memoises game states\nfor theoretically\noptimal play.\nSlowest but smartest."),
+        ]
+
+        card_row = tk.Frame(parent, bg="#0f3460")
+        card_row.pack(pady=12, padx=6, fill="x")
+        self._scards = {}
+
+        for col, (val, label, accent, desc) in enumerate(strategies):
+            card = tk.Frame(card_row, bg="#16213e", relief="ridge", bd=2, cursor="hand2")
+            card.grid(row=0, column=col, padx=7, pady=4, sticky="nsew")
+            card_row.columnconfigure(col, weight=1)
+
+            rb = tk.Radiobutton(
+                card, text=label,
+                variable=self.strategy_var, value=val,
+                font=("Arial", 11, "bold"),
+                bg="#16213e", fg=accent,
+                selectcolor="#0f3460",
+                activebackground="#16213e", activeforeground=accent,
+                cursor="hand2", pady=6)
+            rb.pack(pady=(10, 2))
+
+            tk.Label(card, text=desc,
+                     font=("Arial", 9),
+                     bg="#16213e", fg="#bbbbbb",
+                     justify="center", wraplength=145).pack(padx=6, pady=(2, 12))
+
+            self._scards[val] = (card, accent)
+
+            # clicking anywhere on card activates it
+            for widget in [card] + card.winfo_children():
+                widget.bind("<Button-1>", lambda e, v=val: self.strategy_var.set(v))
+
+        # glow border on selected card
+        def _highlight(*_):
+            sel = self.strategy_var.get()
+            for v, (c, acc) in self._scards.items():
+                if v == sel:
+                    c.config(bd=3, relief="solid",
+                             highlightthickness=2,
+                             highlightbackground=acc,
+                             highlightcolor=acc)
+                else:
+                    c.config(bd=1, relief="ridge",
+                             highlightthickness=0)
+
+        self.strategy_var.trace_add("write", _highlight)
+        _highlight()
+
+    # start game
     def start_game(self):
-        """Start the game with selected options"""
-        size = self.size_var.get()
-        diff = self.diff_var.get()
-        mode = self.mode_var.get()
-        
-        # Unbind mousewheel before destroying
+        size     = self.size_var.get()
+        diff     = self.diff_var.get()
+        mode     = self.mode_var.get()
+        strategy = self.strategy_var.get()
+
         self.root.unbind_all("<MouseWheel>")
         self.root.destroy()
-        
-        # Create game window
+
         game_root = tk.Tk()
-        
-        # Get screen dimensions for game window
-        screen_width = game_root.winfo_screenwidth()
-        screen_height = game_root.winfo_screenheight()
-        
-        # Set game window size based on grid size
-        if size <= 5:
-            game_width = min(900, int(screen_width * 0.75))
-            game_height = min(950, int(screen_height * 0.85))
-        else:
-            game_width = min(1000, int(screen_width * 0.8))
-            game_height = min(1050, int(screen_height * 0.9))
-        
-        # Center game window
-        x = (screen_width - game_width) // 2
-        y = (screen_height - game_height) // 2
-        
-        game_root.geometry(f"{game_width}x{game_height}+{x}+{y}")
+        sw = game_root.winfo_screenwidth()
+        sh = game_root.winfo_screenheight()
+        gw = min(1000, int(sw * 0.80))
+        gh = min(1050, int(sh * 0.90))
+        game_root.geometry(f"{gw}x{gh}+{(sw-gw)//2}+{(sh-gh)//2}")
         game_root.configure(bg="#2c3e50")
-        GameBoard(game_root, size, diff, mode)
+
+        GameBoard(game_root, size, diff, mode, strategy)
         game_root.mainloop()
