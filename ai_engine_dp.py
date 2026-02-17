@@ -32,6 +32,21 @@ def ai_move(self):
         self.memo[key] = False
         return False
     
+    def best_move(self):
+        moves = self.get_valid_moves()
+        if len(moves) == 0:
+            return None
+        i = 0
+        while i < len(moves):
+            r, c = moves[i]
+            self.board[r][c] = BLACK
+            if self.is_winning_position() == False:
+                self.board[r][c] = WHITE
+                return (r, c)
+            self.board[r][c] = WHITE
+            i += 1
+        return moves[0]
+    
   def show_hint(self):
         move = self.best_move()
         if move is None:
