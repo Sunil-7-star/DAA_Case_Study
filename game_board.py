@@ -3,10 +3,18 @@ import random
 import tkinter as tk
 from tkinter import messagebox
 from logic_rules import RuleEngine
+def _load_ai(strategy):
+    """Return the AI class that matches the chosen strategy string."""
+    if strategy == "Greedy":
+        from ai_engine import GreedyAI
+        return GreedyAI
+    elif strategy == "Dynamic Programming":
+        from ai_engine_dp import DPAI
+        return DPAI
+    else:                                  # default -> Divide & Conquer
+        from ai_engine_dc import DivideConquerAI
+        return DivideConquerAI
 
-from ai_engine import GreedyAI as AI
-from ai_engine_dc import DivideConquerAI as AI     # For Divide and Conquer
-from ai_engine_dp import DPAI as AI              # Uncomment for Dynamic Programming
 
 WHITE = "white"
 BLACK = "black"
