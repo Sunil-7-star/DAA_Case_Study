@@ -21,6 +21,16 @@ class DivideConquerAI:
           if score_left >= score_right:
               return left
           return right
+
+  def best_move(self):
+        candidates = []
+        for r in range(self.grid_size):
+            for c in range(self.grid_size):
+                if (self.board[r][c] == WHITE and 
+                    self.is_duplicate(r, c) and 
+                    self.valid_black(r, c)):
+                    candidates.append((r, c))
+        return self._find_best_move(candidates)
   
   def show_hint(self):
         move = self.best_move()
@@ -60,6 +70,7 @@ def score(self, r, c):
 
 
           
+
 
 
 
