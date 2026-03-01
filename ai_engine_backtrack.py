@@ -24,3 +24,21 @@ class BacktrackAI:
         self.best_move_found = None
         self.nodes_explored = 0
         self.max_nodes = 10000
+    def show_hint(self):
+        """Show hint by highlighting the best move."""
+        move = self.best_move()
+        if move is None:
+            return
+        r, c = move
+        btn = self.buttons[r][c]
+        old = btn.cget("bg")
+        btn.config(bg="yellow")
+        self.root.after(1500, lambda: btn.config(bg=old))
+    
+    def solve(self):
+        """Solve the puzzle completely using backtracking."""
+        while True:
+            move = self.best_move()
+            if move is None:
+                break
+            self.make_black(move[0], move[1])
