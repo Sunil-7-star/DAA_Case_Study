@@ -42,3 +42,18 @@ class BacktrackAI:
             if move is None:
                 break
             self.make_black(move[0], move[1])
+    def _greedy_fallback(self, moves):
+        """
+        Greedy fallback for very complex positions.
+        Just pick the move with highest immediate score.
+        """
+        best_move = None
+        best_score = -1
+        
+        for r, c in moves:
+            score = self.score_move(r, c)
+            if score > best_score:
+                best_score = score
+                best_move = (r, c)
+        
+        return best_move if best_move else moves[0]
