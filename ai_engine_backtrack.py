@@ -99,3 +99,6 @@ class BacktrackAI:
             if move is None:
                 break
             self.make_black(move[0], move[1])
+    def count_remaining_moves(self):
+        """Count how many valid moves are available."""
+        return len(self.get_valid_moves())
