@@ -21,3 +21,24 @@ class BacktrackAI:
     def __init__(self):
         self.best_depth = 0
         self.best_move_found = None
+        def best_move(self):
+        """
+        Find the best move using backtracking strategy.
+        Returns:
+            (row, col) tuple or None if no valid moves
+        """
+        moves = self.get_valid_moves()
+        if not moves:
+            return None
+        # For very simple cases, just pick the first valid move
+        if len(moves) == 1:
+            return moves[0]
+        # Score each move with backtracking
+        best_move = None
+        best_score = -1
+        for r, c in moves:
+            score = self.score_move(r, c)
+            if score > best_score:
+                best_score = score
+                best_move = (r, c)
+        return best_move
