@@ -52,3 +52,32 @@ class BacktrackAI:
         old = btn.cget("bg")
         btn.config(bg="yellow")
         self.root.after(1500, lambda: btn.config(bg=old))
+        def backtrack(self, depth=0, max_depth=10):
+        """
+        Backtracking search to find move leading to longest game.
+        
+        Args:
+            depth: Current recursion depth
+            max_depth: Maximum depth to search (prevents timeout)
+        
+        Returns:
+            Number of moves in this branch
+        """
+        # Base case: no more moves available
+        moves = self.get_valid_moves()
+        if not moves or depth >= max_depth:
+            return 0
+        best_branch_length = 0
+        # Try each valid move
+        for r, c in moves:
+            # Make the move
+            old_state = self.board[r][c]
+            self.board[r][c] = BLACK
+            # Recursively explore
+            branch_length = 1 + self.backtrack(depth + 1, max_depth)
+            # Track the longest path
+            if branch_length > best_branch_length:
+                best_branch_length = branch_length
+            # Backtrack: undo the move
+            self.board[r][c] = old_state
+        return best_branch_length
