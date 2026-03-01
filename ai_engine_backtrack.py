@@ -200,3 +200,39 @@ class BacktrackAI:
             best_move = moves[0]
         
         return best_move
+
+def get_valid_moves(self):
+        """Get all valid moves in current board state."""
+        moves = []
+        for r in range(self.grid_size):
+            for c in range(self.grid_size):
+                if (self.board[r][c] == WHITE and 
+                    self.is_duplicate(r, c) and 
+                    self.valid_black(r, c)):
+                    moves.append((r, c))
+        return moves
+    
+    def score_move(self, r, c):
+        """
+        Heuristic score for move ordering.
+        Higher score = more promising move (explore first).
+        """
+        num = self.numbers[r][c]
+        # Count duplicates removed
+        row_dups = sum(1 for j in range(self.grid_size)
+                      if self.numbers[r][j] == num and self.board[r][j] == WHITE)
+        col_dups = sum(1 for i in range(self.grid_size)
+                      if self.numbers[i][c] == num and self.board[i][c] == WHITE)
+        dup_score = row_dups + col_dups - 2
+        
+        # Prefer moves that keep more options open
+        # Quick estimate: count neighbors that are white
+        neighbors = 0
+        for dr, dc in [(0,1), (0,-1), (1,0), (-1,0)]:
+            nr, nc = r + dr, c + dc
+            if (0 <= nr < self.grid_size and 0 <= nc < self.grid_size and
+                self.board[nr][nc] == WHITE):
+                neighbors += 1
+        
+        # Higher score for removing many duplicates and having flexibility
+        return dup_score * 10 + neighbors
