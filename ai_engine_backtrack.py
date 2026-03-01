@@ -102,3 +102,40 @@ class BacktrackAI:
     def count_remaining_moves(self):
         """Count how many valid moves are available."""
         return len(self.get_valid_moves())
+        
+    def score_move(self, r, c):
+        """
+        Score a move based on:
+        1. How many duplicates it removes
+        2. How many moves remain after this move (via backtracking)
+        """
+        # Immediate score: duplicate count
+        num = self.numbers[r][c]
+        row_dups = sum(1 for j in range(self.grid_size)
+                      if self.numbers[r][j] == num and self.board[r][j] == WHITE)
+        col_dups = sum(1 for i in range(self.grid_size)
+                      if self.numbers[i][c] == num and self.board[i][c] == WHITE)
+        immediate_score = row_dups + col_dups - 2
+        
+        # Future score: how many moves remain after this
+        old_state = self.board[r][c]
+        self.board[r][c] = BLACK
+        future_moves = self.backtrack(depth=0, max_depth=5)  # Limited depth for speed
+        self.board[r][c] = old_state
+        
+        # Combined score: favor moves that keep the game going longer
+        return immediate_score + (future_moves * 0.5)
+def get_valid_moves(self):
+        """Get all valid moves in current board state."""
+        moves = []
+        for r in range(self.grid_size):
+            for c in range(self.grid_size):
+                if (self.board[r][c] == WHITE and 
+                    self.is_duplicate(r, c) and 
+                    self.valid_black(r, c)):
+                    moves.append((r, c))
+        return moves
+
+
+
+
