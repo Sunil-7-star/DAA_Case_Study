@@ -57,3 +57,81 @@ class BacktrackAI:
                 best_move = (r, c)
         
         return best_move if best_move else moves[0]
+    def get_depth_limit(self):
+        """
+        Adaptive depth limit based on grid size.
+        Prevents exponential blowup on large grids.
+        """
+        size = self.grid_size
+        if size <= 4:
+            return 15  # Small grid: can search deeper
+        elif size == 5:
+            return 10  # Medium grid
+        elif size == 6:
+            return 6   # Large grid: must limit depth
+        else:  # 7×7 or larger
+            return 4   # Very large: shallow search only
+    
+    def backtrack_limited(self, depth, max_depth, cutoff):
+        """
+        Backtracking with depth limit and pruning.
+        
+        Args:
+            depth: Current depth
+            max_depth: Maximum depth to explore
+            cutoff: Best score found so far (for pruning)
+        
+        Returns:
+            Number of moves achievable from this state
+        """
+        self.nodes_explored += 1
+        
+        # Safety check: prevent runaway exploration
+        if self.nodes_explored > self.max_nodes:
+            return depth
+        
+        # Depth limit reached
+        if depth >= max_depth:
+            return depth
+        
+        moves = self.get_valid_moves()
+        
+        # Base case: no more moves
+        if not moves:
+            return depth
+        
+        # Prune if this branch can't beat current best
+        # Optimistic upper bound: assume all remaining moves are valid
+        optimistic_max = depth + len(moves)
+        if optimistic_max <= cutoff:
+            return depth  # Prune this branch
+        
+        # Sort moves by heuristic (explore promising moves first)
+        scored_moves = [(self.score_move(r, c), r, c) for r, c in moves]
+        scored_moves.sort(reverse=True)
+        
+        # Limit branching factor on large grids
+        if len(scored_moves) > 8:
+            scored_moves = scored_moves[:8]  # Only explore top 8 moves
+        
+        best_result = depth
+        
+        for score, r, c in scored_moves:
+            # Make move
+            self.board[r][c] = BLACK
+            
+            # Recurse
+            result = self.backtrack_limited(depth + 1, max_depth, best_result)
+            
+            # Backtrack
+            self.board[r][c] = WHITE
+            
+            # Update best
+            if result > best_result:
+                best_result = result
+            
+            # Alpha-beta style pruning
+            if result >= max_depth:
+                break  # Found a very good path, stop exploring
+        
+        return best_result
