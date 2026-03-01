@@ -145,6 +145,10 @@ class StartMenu:
              "🧮 Dynamic Prog.",
              "#8e44ad",
              "Memoises game states\nfor theoretically\noptimal play.\nSlowest but smartest."),
+            ("Backtracking",
+             "🔙 Backtracking",
+             "#16a085",
+             "Explores all move\nsequences to find the\nlongest path.\nVery thorough."),
         ]
 
         card_row = tk.Frame(parent, bg="#0f3460")
