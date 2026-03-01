@@ -135,3 +135,68 @@ class BacktrackAI:
                 break  # Found a very good path, stop exploring
         
         return best_result
+    def ai_move(self):
+        """Make an AI move."""
+        move = self.best_move()
+        if move is None:
+            return
+        self.save_state()
+        self.make_black(move[0], move[1])
+       def best_move(self):
+        """
+        Find the best move using optimized backtracking.
+        
+        Uses iterative deepening and aggressive pruning.
+        Falls back to greedy if too complex.
+        """
+        moves = self.get_valid_moves()
+        
+        if not moves:
+            return None
+        
+        if len(moves) == 1:
+            return moves[0]
+        
+        # For very complex positions, use greedy approach
+        if len(moves) > 20:
+            return self._greedy_fallback(moves)
+        
+        # Reset node counter
+        self.nodes_explored = 0
+        max_depth = self.get_depth_limit()
+        
+        # Score each candidate move
+        best_move = None
+        best_score = -1
+        
+        # Sort moves by heuristic
+        scored_moves = [(self.score_move(r, c), r, c) for r, c in moves]
+        scored_moves.sort(reverse=True)
+        
+        # Only evaluate top candidates on large grids
+        candidates = scored_moves[:min(10, len(scored_moves))]
+        
+        for heur_score, r, c in candidates:
+            # Make move
+            self.board[r][c] = BLACK
+            
+            # Evaluate with limited backtracking
+            depth = self.backtrack_limited(1, max_depth, best_score)
+            
+            # Backtrack
+            self.board[r][c] = WHITE
+            
+            # Update best
+            if depth > best_score:
+                best_score = depth
+                best_move = (r, c)
+            
+            # Stop early if we've explored too many nodes
+            if self.nodes_explored > self.max_nodes:
+                break
+        
+        # Safety fallback
+        if best_move is None:
+            best_move = moves[0]
+        
+        return best_move
