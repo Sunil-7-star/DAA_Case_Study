@@ -42,3 +42,13 @@ class BacktrackAI:
                 best_score = score
                 best_move = (r, c)
         return best_move
+        def show_hint(self):
+        """Show hint by highlighting the best move."""
+        move = self.best_move()
+        if move is None:
+            return
+        r, c = move
+        btn = self.buttons[r][c]
+        old = btn.cget("bg")
+        btn.config(bg="yellow")
+        self.root.after(1500, lambda: btn.config(bg=old))
