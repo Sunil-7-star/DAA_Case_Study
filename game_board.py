@@ -11,6 +11,9 @@ def _load_ai(strategy):
     elif strategy == "Dynamic Programming":
         from ai_engine_dp import DPAI
         return DPAI
+    elif strategy == "Backtracking":
+        from ai_engine_backtrack import BacktrackAI
+        return BacktrackAI
     else:                                  # default -> Divide & Conquer
         from ai_engine_dc import DivideConquerAI
         return DivideConquerAI
